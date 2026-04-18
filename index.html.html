@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abu Ridwan Siddique — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --geo: #c8a04a;
+  --geo-l: #e8d08a;
+  --geo-d: #5a420d;
+  --anemo: #4ecdc4;
+  --anemo-l: #88e4de;
+  --anemo-d: #2a9d8f;
+  --bg: #07060f;
+  --bg2: #0d0c1e;
+  --card: rgba(10, 8, 24, 0.90);
+  --text: #f0e6d2;
+  --text2: #b8a88a;
+  --muted: #5a4a35;
+  --b-geo: rgba(200,160,74,0.22);
+  --b-anemo: rgba(78,205,196,0.22);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: 'Lora', serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ─── CANVAS ─── */
+#particles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ─── PROGRESS BAR ─── */
+#progress {
+  position: fixed; top:0; left:0; height:2px; width:0%;
+  background: linear-gradient(90deg, var(--geo), var(--anemo));
+  z-index: 300; transition: width .1s linear;
+}
+
+/* ─── NOTIFICATION ─── */
+.notif {
+  position: fixed; top: 74px; right: 1.5rem; z-index: 500;
+  background: linear-gradient(135deg, rgba(78,205,196,.10), rgba(200,160,74,.10));
+  border: 1px solid var(--geo); border-radius: 9px;
+  padding: .85rem 1.4rem;
+  font-family: 'Cinzel', serif; font-size: .8rem; letter-spacing: .06em;
+  color: var(--text); box-shadow: 0 0 30px rgba(200,160,74,.15);
+  transform: translateX(160%); transition: transform .42s cubic-bezier(.22,1,.36,1);
+  max-width: 320px;
+}
+.notif.show { transform: translateX(0); }
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index: 200;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .9rem 5%;
+  background: rgba(7,6,15,.93); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--b-geo);
+}
+.nav-brand {
+  font-family: 'Cinzel Decorative', cursive; font-size: .95rem;
+  color: var(--geo); text-shadow: 0 0 18px rgba(200,160,74,.45); letter-spacing: .06em;
+}
+.nav-ul { display:flex; gap:1.8rem; list-style:none; }
+.nav-ul a {
+  font-family: 'Cinzel', serif; font-size: .7rem; color: var(--text2);
+  text-decoration: none; letter-spacing: .14em; text-transform: uppercase;
+  transition: color .3s, text-shadow .3s;
+}
+.nav-ul a:hover { color: var(--geo); text-shadow: 0 0 12px rgba(200,160,74,.5); }
+.nav-toggle { display:none; background:none; border:none; color:var(--geo); font-size:1.4rem; cursor:pointer; }
+
+/* ─── WRAP ─── */
+.wrap { position:relative; z-index:1; }
+
+/* ─── SECTION BASE ─── */
+.sect { max-width:1080px; margin:0 auto; padding:5rem 5%; }
+.sect-head { text-align:center; margin-bottom:2.8rem; }
+.sect-label {
+  font-family:'Cinzel',serif; font-size:.68rem; letter-spacing:.48em;
+  text-transform:uppercase; color:var(--anemo); display:block; margin-bottom:.4rem;
+}
+.sect-title {
+  font-family:'Cinzel Decorative',cursive; font-size:clamp(1.35rem,3vw,2rem);
+  color:var(--geo); text-shadow:0 0 22px rgba(200,160,74,.22);
+}
+.divider {
+  width:65px; height:2px; margin:.85rem auto 0;
+  background:linear-gradient(90deg,var(--geo),var(--anemo)); border-radius:2px;
+}
+
+/* ─── REVEAL ─── */
+.reveal {
+  opacity:0; transform:translateY(24px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+.reveal.vis { opacity:1; transform:translateY(0); }
+
+/* ─── HERO ─── */
+#hero {
+  min-height: 100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding: 7rem 5% 5rem;
+}
+.hero-badges { display:flex; gap:1rem; margin-bottom:2rem; justify-content:center; }
+.badge {
+  width:54px; height:54px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+}
+.badge-geo {
+  background:radial-gradient(circle,rgba(200,160,74,.18),transparent);
+  border:1px solid var(--geo); box-shadow:0 0 22px rgba(200,160,74,.38);
+  animation:floatUp 3.2s ease-in-out infinite;
+}
+.badge-anemo {
+  background:radial-gradient(circle,rgba(78,205,196,.18),transparent);
+  border:1px solid var(--anemo); box-shadow:0 0 22px rgba(78,205,196,.38);
+  animation:floatUp 3.2s ease-in-out .55s infinite;
+}
+@keyframes floatUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-13px)} }
+@keyframes fadeUp  { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulseGlow { 0%,100%{box-shadow:0 0 10px rgba(200,160,74,.5)} 50%{box-shadow:0 0 22px rgba(200,160,74,.9)} }
+
+.hero-name {
+  font-family:'Cinzel Decorative',cursive; font-weight:900;
+  font-size:clamp(1.9rem,5.5vw,4rem); line-height:1.15;
+  background:linear-gradient(135deg,var(--geo-l),var(--geo) 45%,var(--anemo));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:.75rem; animation:fadeUp 1s ease both;
+}
+.hero-title {
+  font-family:'Cinzel',serif; font-size:clamp(.82rem,1.8vw,1.1rem);
+  color:var(--anemo); letter-spacing:.38em; text-transform:uppercase;
+  margin-bottom:1.4rem; animation:fadeUp 1s ease .2s both;
+}
+.hero-bio {
+  max-width:560px; font-size:1rem; color:var(--text2);
+  line-height:1.9; font-style:italic; margin-bottom:2.5rem;
+  animation:fadeUp 1s ease .4s both;
+}
+.hero-btns {
+  display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;
+  animation:fadeUp 1s ease .6s both;
+}
+.btn-primary {
+  padding:.72rem 1.9rem; font-family:'Cinzel',serif; font-size:.78rem;
+  letter-spacing:.13em; text-transform:uppercase;
+  background:linear-gradient(135deg,var(--geo-d),var(--geo));
+  color:#fff; border:none; border-radius:5px; cursor:pointer;
+  text-decoration:none; transition:all .3s;
+  box-shadow:0 0 18px rgba(200,160,74,.25);
+}
+.btn-primary:hover { box-shadow:0 0 34px rgba(200,160,74,.55); transform:translateY(-3px); }
+.btn-secondary {
+  padding:.72rem 1.9rem; font-family:'Cinzel',serif; font-size:.78rem;
+  letter-spacing:.13em; text-transform:uppercase;
+  background:transparent; color:var(--anemo);
+  border:1px solid var(--anemo); border-radius:5px;
+  cursor:pointer; text-decoration:none; transition:all .3s;
+}
+.btn-secondary:hover { background:rgba(78,205,196,.08); box-shadow:0 0 24px rgba(78,205,196,.3); transform:translateY(-3px); }
+
+/* ─── ABOUT ─── */
+.about-card {
+  background:var(--card); border:1px solid var(--b-geo);
+  border-radius:14px; padding:2.5rem;
+  backdrop-filter:blur(12px); position:relative; overflow:hidden;
+}
+.about-card::after {
+  content:'✦'; position:absolute; bottom:1rem; right:1.8rem;
+  color:var(--geo); opacity:.1; font-size:6rem; line-height:1; pointer-events:none;
+}
+.about-card::before {
+  content:''; position:absolute; top:-40%; right:-10%;
+  width:300px; height:300px; border-radius:50%;
+  background:radial-gradient(circle,rgba(78,205,196,.04),transparent 70%);
+  pointer-events:none;
+}
+.about-card p { color:var(--text2); line-height:1.95; font-size:1rem; }
+.about-card p + p { margin-top:1.1rem; }
+
+/* ─── SKILLS ─── */
+.skills-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(138px,1fr)); gap:1rem;
+}
+.skill-card {
+  background:var(--card); border:1px solid var(--b-geo); border-radius:10px;
+  padding:1.4rem 1rem; text-align:center;
+  transition:all .3s; position:relative; overflow:hidden;
+}
+.skill-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 50% -10%,rgba(200,160,74,.12),transparent 65%);
+  opacity:0; transition:opacity .3s;
+}
+.skill-card:hover::before { opacity:1; }
+.skill-card:hover {
+  border-color:var(--geo); transform:translateY(-7px);
+  box-shadow:0 14px 38px rgba(200,160,74,.18);
+}
+.s-icon { font-size:2.1rem; display:block; margin-bottom:.45rem; }
+.s-name { font-family:'Cinzel',serif; font-size:.78rem; color:var(--text); letter-spacing:.04em; }
+.s-type { font-size:.68rem; color:var(--anemo); margin-top:.22rem; font-style:italic; }
+
+/* ─── EDUCATION ─── */
+.timeline { position:relative; padding-left:2.6rem; }
+.timeline::before {
+  content:''; position:absolute; left:10px; top:8px; bottom:8px; width:2px;
+  background:linear-gradient(180deg,var(--geo),var(--anemo)); border-radius:2px;
+}
+.t-item {
+  position:relative; margin-bottom:1.8rem;
+  background:var(--card); border:1px solid var(--b-geo); border-radius:11px;
+  padding:1.4rem 1.6rem; transition:all .45s;
+  opacity:0; transform:translateX(-22px);
+}
+.t-item.vis { opacity:1; transform:translateX(0); }
+.t-item:hover { border-color:var(--geo); box-shadow:0 8px 28px rgba(200,160,74,.12); }
+.t-dot {
+  position:absolute; left:-2.95rem; top:1.35rem;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--geo);
+  box-shadow:0 0 10px rgba(200,160,74,.45);
+}
+.t-dot.current {
+  background:var(--geo); animation:pulseGlow 2.2s ease-in-out infinite;
+}
+.t-degree { font-family:'Cinzel',serif; font-size:.95rem; color:var(--geo); margin-bottom:.22rem; }
+.t-school  { font-size:.88rem; color:var(--text2); margin-bottom:.12rem; }
+.t-meta    { font-size:.78rem; color:var(--anemo); font-style:italic; }
+.t-badge {
+  display:inline-block; background:rgba(200,160,74,.1);
+  border:1px solid var(--b-geo); border-radius:20px;
+  padding:.14rem .7rem; font-size:.68rem;
+  font-family:'Cinzel',serif; color:var(--geo-l); margin-top:.4rem;
+}
+
+/* ─── ACHIEVEMENTS ─── */
+.ach-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+.ach-card {
+  background:var(--card); border:1px solid var(--b-anemo); border-radius:14px;
+  padding:2.4rem 1.8rem; text-align:center;
+  text-decoration:none; display:block; transition:all .32s;
+  position:relative; overflow:hidden;
+}
+.ach-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 110%,rgba(78,205,196,.07),transparent 60%);
+}
+.ach-card:hover {
+  border-color:var(--anemo); box-shadow:0 0 42px rgba(78,205,196,.18);
+  transform:translateY(-7px);
+}
+.ach-logo { font-size:3rem; margin-bottom:.55rem; display:block; }
+.ach-platform {
+  font-family:'Cinzel',serif; font-size:.95rem; color:var(--text2);
+  margin-bottom:.6rem; letter-spacing:.09em;
+}
+.ach-rank { font-family:'Cinzel Decorative',cursive; font-size:1.7rem; margin-bottom:.35rem; }
+.rank-pupil { color:#7ec8e3; text-shadow:0 0 18px rgba(126,200,227,.5); }
+.rank-2star { color:var(--geo); text-shadow:0 0 18px rgba(200,160,74,.55); }
+.ach-handle { font-size:.78rem; color:var(--muted); font-style:italic; margin-bottom:.65rem; }
+.ach-link-txt {
+  font-family:'Cinzel',serif; font-size:.7rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--anemo);
+}
+.ach-stars { color:var(--geo); font-size:1.1rem; margin-bottom:.35rem; letter-spacing:.1em; }
+
+/* ─── PROJECTS ─── */
+.proj-adder {
+  display:flex; gap:.85rem; align-items:center;
+  background:var(--card); border:1px solid var(--b-geo);
+  border-radius:10px; padding:1rem 1.3rem; margin-bottom:1.8rem; flex-wrap:wrap;
+}
+.proj-adder-label {
+  font-family:'Cinzel',serif; font-size:.72rem; color:var(--geo);
+  letter-spacing:.12em; white-space:nowrap; text-transform:uppercase;
+}
+.proj-input {
+  flex:1; min-width:200px;
+  background:rgba(7,6,15,.75); border:1px solid var(--b-geo); border-radius:5px;
+  padding:.6rem .9rem; color:var(--text); font-family:'Lora',serif;
+  font-size:.87rem; outline:none; transition:border-color .3s;
+}
+.proj-input::placeholder { color:var(--muted); }
+.proj-input:focus { border-color:var(--geo); }
+
+.proj-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:1.4rem; }
+.proj-card {
+  background:var(--card); border:1px solid var(--b-geo); border-radius:12px;
+  padding:1.5rem; transition:all .3s; animation:fadeUp .5s ease both;
+}
+.proj-card:hover { border-color:var(--geo); box-shadow:0 12px 32px rgba(200,160,74,.14); transform:translateY(-6px); }
+.proj-title { font-family:'Cinzel',serif; font-size:.95rem; color:var(--geo); margin-bottom:.35rem; }
+.proj-desc { font-size:.84rem; color:var(--text2); line-height:1.62; margin-bottom:.75rem; }
+.proj-meta { display:flex; gap:.55rem; flex-wrap:wrap; margin-bottom:.75rem; }
+.proj-tag {
+  font-size:.68rem; background:rgba(78,205,196,.09);
+  border:1px solid var(--b-anemo); border-radius:20px;
+  padding:.14rem .65rem; color:var(--anemo); font-family:'Cinzel',serif;
+}
+.proj-link {
+  font-family:'Cinzel',serif; font-size:.7rem; color:var(--anemo);
+  text-decoration:none; letter-spacing:.1em; text-transform:uppercase;
+}
+.proj-link:hover { text-shadow:0 0 10px rgba(78,205,196,.5); }
+
+.cs-card {
+  background:var(--card); border:1px dashed var(--b-geo); border-radius:12px;
+  padding:2rem; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:160px; opacity:.5; text-align:center; transition:all .3s;
+}
+.cs-card:hover { opacity:.75; border-color:var(--geo); }
+.cs-icon { font-size:2.4rem; margin-bottom:.45rem; }
+.cs-text { font-family:'Cinzel',serif; font-size:.75rem; color:var(--muted); letter-spacing:.14em; text-transform:uppercase; }
+
+/* ─── CONTACT ─── */
+.contact-grid { display:grid; grid-template-columns:1fr 1.6fr; gap:2.5rem; align-items:start; }
+.contact-info { display:flex; flex-direction:column; gap:1.2rem; }
+.ci-card {
+  background:var(--card); border:1px solid var(--b-geo); border-radius:10px;
+  padding:1.1rem 1.3rem; display:flex; align-items:center; gap:.9rem;
+  text-decoration:none; color:var(--text2); font-size:.88rem;
+  transition:all .3s;
+}
+.ci-card:hover { border-color:var(--anemo); color:var(--anemo-l); transform:translateX(5px); }
+.ci-icon { font-size:1.3rem; flex-shrink:0; }
+.ci-label { font-family:'Cinzel',serif; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--geo); display:block; margin-bottom:.15rem; }
+.ci-val { font-size:.83rem; color:var(--text2); }
+
+.contact-form {
+  background:var(--card); border:1px solid var(--b-geo); border-radius:14px;
+  padding:2.2rem; backdrop-filter:blur(12px);
+}
+.f-group { margin-bottom:1.35rem; }
+.f-label {
+  font-family:'Cinzel',serif; font-size:.72rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--geo); display:block; margin-bottom:.45rem;
+}
+.f-input {
+  width:100%; padding:.72rem 1rem;
+  background:rgba(7,6,15,.8); border:1px solid var(--b-geo); border-radius:6px;
+  color:var(--text); font-family:'Lora',serif; font-size:.92rem;
+  outline:none; transition:border-color .3s, box-shadow .3s;
+}
+.f-input:focus { border-color:var(--geo); box-shadow:0 0 14px rgba(200,160,74,.12); }
+textarea.f-input { resize:vertical; min-height:128px; }
+
+/* ─── FOOTER ─── */
+footer {
+  text-align:center; padding:2.8rem 2rem;
+  border-top:1px solid var(--b-geo);
+}
+.soc-links { display:flex; justify-content:center; gap:1.8rem; margin-bottom:1rem; flex-wrap:wrap; }
+.soc-links a {
+  font-family:'Cinzel',serif; font-size:.75rem; color:var(--text2);
+  text-decoration:none; letter-spacing:.1em; transition:color .3s;
+  display:flex; align-items:center; gap:.4rem;
+}
+.soc-links a:hover { color:var(--anemo); }
+.foot-copy { font-family:'Cinzel',serif; font-size:.65rem; color:var(--muted); letter-spacing:.12em; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width:768px) {
+  .nav-ul { display:none; }
+  .nav-ul.open { display:flex; flex-direction:column; gap:.8rem; position:absolute; top:60px; left:0; right:0; background:rgba(7,6,15,.97); padding:1.5rem 5%; border-bottom:1px solid var(--b-geo); }
+  .nav-toggle { display:block; }
+  .ach-grid { grid-template-columns:1fr; }
+  .contact-grid { grid-template-columns:1fr; }
+  .proj-adder label { white-space:normal; }
+}
+@media (max-width:480px) {
+  .skills-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); }
+  .hero-btns { flex-direction:column; align-items:center; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<div id="progress"></div>
+<div id="notif" class="notif">✦ Message ready!</div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <div class="nav-brand">A · R · S</div>
+  <ul class="nav-ul" id="navUl">
+    <li><a href="#about" onclick="closeNav()">About</a></li>
+    <li><a href="#skills" onclick="closeNav()">Skills</a></li>
+    <li><a href="#education" onclick="closeNav()">Education</a></li>
+    <li><a href="#achievements" onclick="closeNav()">Achievements</a></li>
+    <li><a href="#projects" onclick="closeNav()">Projects</a></li>
+    <li><a href="#contact" onclick="closeNav()">Contact</a></li>
+  </ul>
+  <button class="nav-toggle" onclick="toggleNav()">☰</button>
+</nav>
+
+<!-- ─── MAIN ─── -->
+<div class="wrap">
+
+  <!-- HERO -->
+  <section id="hero">
+
+    <h1 class="hero-name">Abu Ridwan Siddique</h1>
+    <div class="hero-title">Software Engineer Undergrad</div>
+    <p class="hero-bio">
+      A student of Software Engineering at Daffodil International University, passionate
+      about Competitive Programming and exploring the frontiers of AI &amp; ML.
+      A tech enthusiast who loves gaming and tries to learn something new every single day.
+    </p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn-primary">✉ Contact Me</a>
+      <a href="#projects" class="btn-secondary">⚗ View Projects</a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">The Traveler's Tale</span>
+      <h2 class="sect-title">About Me</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="about-card reveal">
+      <p>I am Abu Ridwan Siddique, a 2nd-year B.Sc. student in Software Engineering at Daffodil International University, maintaining a CGPA of 3.85. My journey in the world of code is driven by a deep love for problem-solving, which led me to Competitive Programming — a pursuit I actively explore on Codeforces and CodeChef.</p>
+      <p>Beyond the terminal, I am captivated by the emerging frontiers of Artificial Intelligence and Machine Learning, fascinated by how intelligent systems are reshaping reality. I bring creativity to my designs using Canva, and I wield multiple programming languages to craft solutions. When I step away from the keyboard, you will find me deep in Genshin Impact or chasing the latest breakthroughs in tech. Every day is a new quest to learn, grow, and create something meaningful.</p>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">Elemental Mastery</span>
+      <h2 class="sect-title">Skills</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card reveal" style="transition-delay:.05s">
+        <span class="s-icon">⚙️</span>
+        <div class="s-name">C</div>
+        <div class="s-type">Language</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.1s">
+        <span class="s-icon">⚡</span>
+        <div class="s-name">C++</div>
+        <div class="s-type">Language</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.15s">
+        <span class="s-icon">🐍</span>
+        <div class="s-name">Python</div>
+        <div class="s-type">Language</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.2s">
+        <span class="s-icon">☕</span>
+        <div class="s-name">Java</div>
+        <div class="s-type">Language</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.25s">
+        <span class="s-icon">🗄️</span>
+        <div class="s-name">MySQL</div>
+        <div class="s-type">Database</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.3s">
+        <span class="s-icon">🐬</span>
+        <div class="s-name">MariaDB</div>
+        <div class="s-type">Database</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.35s">
+        <span class="s-icon">🎨</span>
+        <div class="s-name">Canva</div>
+        <div class="s-type">Design</div>
+      </div>
+      <div class="skill-card reveal" style="transition-delay:.4s">
+        <span class="s-icon">🤖</span>
+        <div class="s-name">AI / ML</div>
+        <div class="s-type">Learning</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section id="education" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">The Scholar's Path</span>
+      <h2 class="sect-title">Education</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="timeline">
+      <div class="t-item" style="transition-delay:.05s">
+        <div class="t-dot current"></div>
+        <div class="t-degree">B.Sc. in Software Engineering</div>
+        <div class="t-school">Daffodil International University</div>
+        <div class="t-meta">2nd Year &nbsp;·&nbsp; CGPA: 3.85 &nbsp;·&nbsp; Currently Pursuing</div>
+        <span class="t-badge">🎓 In Progress</span>
+      </div>
+      <div class="t-item" style="transition-delay:.12s">
+        <div class="t-dot"></div>
+        <div class="t-degree">HSC</div>
+        <div class="t-school">Uttara High School and College</div>
+        <div class="t-meta">GPA: 5.00 &nbsp;·&nbsp; 2022</div>
+      </div>
+      <div class="t-item" style="transition-delay:.19s">
+        <div class="t-dot"></div>
+        <div class="t-degree">SSC</div>
+        <div class="t-school">Milestone School and College</div>
+        <div class="t-meta">GPA: 5.00 &nbsp;·&nbsp; 2020</div>
+      </div>
+      <div class="t-item" style="transition-delay:.26s">
+        <div class="t-dot"></div>
+        <div class="t-degree">JSC</div>
+        <div class="t-school">Milestone School and College</div>
+        <div class="t-meta">GPA: 5.00 &nbsp;·&nbsp; 2017</div>
+      </div>
+      <div class="t-item" style="transition-delay:.33s">
+        <div class="t-dot"></div>
+        <div class="t-degree">PSC</div>
+        <div class="t-school">King Khaled Institute</div>
+        <div class="t-meta">GPA: 5.00 &nbsp;·&nbsp; 2014</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section id="achievements" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">Battle Records</span>
+      <h2 class="sect-title">Achievements</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="ach-grid">
+      <a class="ach-card reveal" href="https://codeforces.com/profile/rythm420" target="_blank" rel="noopener">
+        <span class="ach-logo">⚔️</span>
+        <div class="ach-platform">Codeforces</div>
+        <div class="ach-rank rank-pupil">Pupil</div>
+        <div class="ach-handle">@rythm420</div>
+        <div class="ach-link-txt">↗ View Profile</div>
+      </a>
+      <a class="ach-card reveal" href="https://www.codechef.com/users/rythm420" target="_blank" rel="noopener" style="transition-delay:.1s">
+        <span class="ach-logo">👨‍🍳</span>
+        <div class="ach-platform">CodeChef</div>
+        <div class="ach-rank rank-2star">2 ★ Rated</div>
+        <div class="ach-handle">@rythm420</div>
+        <div class="ach-link-txt">↗ View Profile</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">Domain of Creation</span>
+      <h2 class="sect-title">Projects</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="proj-adder reveal">
+      <span class="proj-adder-label">✦ Add GitHub Repo</span>
+      <input id="ghInput" class="proj-input" type="text"
+        placeholder="github.com/username/repo  or  username/repo" />
+      <button class="btn-primary" id="addBtn" onclick="addProject()">Add Project</button>
+    </div>
+    <div id="projGrid" class="proj-grid">
+      <div class="cs-card">
+        <div class="cs-icon">🔭</div>
+        <div class="cs-text">Coming Soon</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-icon">⚗️</div>
+        <div class="cs-text">Coming Soon</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-icon">🌌</div>
+        <div class="cs-text">Coming Soon</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="sect">
+    <div class="sect-head reveal">
+      <span class="sect-label">Send a Vision</span>
+      <h2 class="sect-title">Contact</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <a class="ci-card" href="mailto:rythm3472@gmail.com">
+          <span class="ci-icon">✉️</span>
+          <div>
+            <span class="ci-label">Email</span>
+            <span class="ci-val">rythm3472@gmail.com</span>
+          </div>
+        </a>
+        <a class="ci-card" href="https://www.linkedin.com/in/ridwan-rythm-325b96347/" target="_blank" rel="noopener">
+          <span class="ci-icon">💼</span>
+          <div>
+            <span class="ci-label">LinkedIn</span>
+            <span class="ci-val">ridwan-rythm</span>
+          </div>
+        </a>
+        <a class="ci-card" href="https://github.com/Ridwan-Rythm" target="_blank" rel="noopener">
+          <span class="ci-icon">⌨️</span>
+          <div>
+            <span class="ci-label">GitHub</span>
+            <span class="ci-val">Ridwan-Rythm</span>
+          </div>
+        </a>
+        <a class="ci-card" href="https://codeforces.com/profile/rythm420" target="_blank" rel="noopener">
+          <span class="ci-icon">⚔️</span>
+          <div>
+            <span class="ci-label">Codeforces</span>
+            <span class="ci-val">rythm420 — Pupil</span>
+          </div>
+        </a>
+        <a class="ci-card" href="https://www.codechef.com/users/rythm420" target="_blank" rel="noopener">
+          <span class="ci-icon">👨‍🍳</span>
+          <div>
+            <span class="ci-label">CodeChef</span>
+            <span class="ci-val">rythm420 — 2 ★</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="contact-form reveal" style="transition-delay:.1s">
+        <div class="f-group">
+          <label class="f-label" for="cName">Your Name</label>
+          <input id="cName" class="f-input" type="text" placeholder="Traveler...">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="cEmail">Your Email</label>
+          <input id="cEmail" class="f-input" type="email" placeholder="your@email.com">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="cMsg">Message</label>
+          <textarea id="cMsg" class="f-input" placeholder="Share your thoughts with the traveler..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="sendContact()">Send Message ✦</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="soc-links">
+      <a href="mailto:rythm3472@gmail.com">✉ Email</a>
+      <a href="https://www.linkedin.com/in/ridwan-rythm-325b96347/" target="_blank">💼 LinkedIn</a>
+      <a href="https://github.com/Ridwan-Rythm" target="_blank">⌨ GitHub</a>
+      <a href="https://codeforces.com/profile/rythm420" target="_blank">⚔ Codeforces</a>
+      <a href="https://www.codechef.com/users/rythm420" target="_blank">👨‍🍳 CodeChef</a>
+    </div>
+    <div class="foot-copy">© 2025 Abu Ridwan Siddique &nbsp;·&nbsp; Forged with Geo &amp; Anemo &nbsp;·&nbsp; All Rights Reserved</div>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+/* ══════════════════════════════════════
+   CANVAS PARTICLES
+══════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Stars
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.3,
+    a: Math.random(),
+    da: (Math.random() - .5) * .007
+  }));
+
+  // Geo hexagons (golden)
+  const geos = Array.from({length:16}, () => ({
+    x: Math.random(), y: Math.random(),
+    s: 3 + Math.random() * 9,
+    vx: (Math.random() - .5) * .00018,
+    vy: -(0.00004 + Math.random() * .00009),
+    rot: Math.random() * Math.PI * 2,
+    drot: (Math.random() - .5) * .004,
+    op: .07 + Math.random() * .22
+  }));
+
+  // Anemo spirals (teal)
+  const anemos = Array.from({length:22}, () => ({
+    cx: Math.random(), cy: Math.random(),
+    r: 1.5 + Math.random() * 4,
+    angle: Math.random() * Math.PI * 2,
+    speed: .005 + Math.random() * .014,
+    radius: .008 + Math.random() * .038,
+    dcy: -(0.00002 + Math.random() * .00006),
+    op: .06 + Math.random() * .17
+  }));
+
+  function hexPath(x, y, r, rot){
+    ctx.beginPath();
+    for(let i = 0; i < 6; i++){
+      const a = rot + (Math.PI/3)*i;
+      i===0 ? ctx.moveTo(x+r*Math.cos(a), y+r*Math.sin(a))
+             : ctx.lineTo(x+r*Math.cos(a), y+r*Math.sin(a));
+    }
+    ctx.closePath();
+  }
+
+  function draw(){
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // Stars
+    stars.forEach(s => {
+      s.a += s.da;
+      if(s.a<.08||s.a>1) s.da*=-1;
+      ctx.beginPath();
+      ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(240,230,210,${s.a*.5})`;
+      ctx.fill();
+    });
+
+    // Geo hexagons
+    geos.forEach(g => {
+      g.x+=g.vx; g.y+=g.vy; g.rot+=g.drot;
+      if(g.y<-.06){ g.y=1.06; g.x=Math.random(); }
+      if(g.x<-.06) g.x=1.06;
+      if(g.x>1.06) g.x=-.06;
+      hexPath(g.x*W, g.y*H, g.s, g.rot);
+      ctx.strokeStyle = `rgba(200,160,74,${g.op})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Anemo particles
+    anemos.forEach(a => {
+      a.angle += a.speed;
+      a.cy += a.dcy;
+      if(a.cy<-.08){ a.cy=1.08; a.cx=Math.random(); }
+      const px = (a.cx + Math.cos(a.angle)*a.radius)*W;
+      const py = (a.cy + Math.sin(a.angle)*a.radius)*H;
+      ctx.beginPath();
+      ctx.arc(px, py, a.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(78,205,196,${a.op})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════════
+   SCROLL PROGRESS
+══════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('progress').style.width = Math.min(pct,100) + '%';
+});
+
+/* ══════════════════════════════════════
+   INTERSECTION OBSERVER (REVEAL)
+══════════════════════════════════════ */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { e.target.classList.add('vis'); }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal, .t-item').forEach(el => io.observe(el));
+
+/* ══════════════════════════════════════
+   NOTIFICATION
+══════════════════════════════════════ */
+function showNotif(msg, duration=3500){
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  clearTimeout(n._t);
+  n._t = setTimeout(() => n.classList.remove('show'), duration);
+}
+
+/* ══════════════════════════════════════
+   NAV MOBILE TOGGLE
+══════════════════════════════════════ */
+function toggleNav(){
+  document.getElementById('navUl').classList.toggle('open');
+}
+function closeNav(){
+  document.getElementById('navUl').classList.remove('open');
+}
+
+/* ══════════════════════════════════════
+   GITHUB PROJECT ADDER
+══════════════════════════════════════ */
+async function addProject(){
+  const input = document.getElementById('ghInput').value.trim();
+  if(!input){ showNotif('⚠️ Please enter a GitHub URL or username/repo'); return; }
+
+  let owner, repo;
+  const urlMatch = input.match(/github\.com\/([^\/\s]+)\/([^\/\s\?#]+)/);
+  if(urlMatch){
+    owner = urlMatch[1]; repo = urlMatch[2];
+  } else if(input.includes('/')){
+    const parts = input.split('/');
+    owner = parts[0]; repo = parts[1];
+  } else {
+    showNotif('⚠️ Invalid format. Try: github.com/user/repo or user/repo'); return;
+  }
+  repo = repo.replace(/\.git$/, '').split('?')[0].split('#')[0];
+
+  const btn = document.getElementById('addBtn');
+  btn.textContent = '⏳ Loading...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    if(!res.ok) throw new Error('Not found');
+    const data = await res.json();
+
+    const grid = document.getElementById('projGrid');
+    const card = document.createElement('div');
+    card.className = 'proj-card';
+    const lang = data.language || '—';
+    const stars = data.stargazers_count || 0;
+    const forks = data.forks_count || 0;
+    const desc = data.description || 'No description provided.';
+    card.innerHTML = `
+      <div class="proj-title">${data.name}</div>
+      <div class="proj-desc">${desc.substring(0,120)}${desc.length>120?'…':''}</div>
+      <div class="proj-meta">
+        <span class="proj-tag">🔷 ${lang}</span>
+        ${stars>0?`<span class="proj-tag">⭐ ${stars}</span>`:''}
+        ${forks>0?`<span class="proj-tag">🍴 ${forks}</span>`:''}
+      </div>
+      <a class="proj-link" href="${data.html_url}" target="_blank" rel="noopener">↗ View on GitHub</a>
+    `;
+    // Remove a coming-soon card if any remain
+    const cs = grid.querySelector('.cs-card');
+    if(cs) grid.removeChild(cs);
+    grid.insertBefore(card, grid.firstChild);
+
+    document.getElementById('ghInput').value = '';
+    showNotif(`✦ "${data.name}" added to your portfolio!`);
+  } catch(e){
+    showNotif('⚠️ Could not fetch repo. Check the URL and try again.');
+  } finally {
+    btn.textContent = 'Add Project';
+    btn.disabled = false;
+  }
+}
+
+// Allow pressing Enter in the input field
+document.getElementById('ghInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') addProject();
+});
+
+/* ══════════════════════════════════════
+   CONTACT FORM → MAILTO
+══════════════════════════════════════ */
+function sendContact(){
+  const name  = document.getElementById('cName').value.trim();
+  const email = document.getElementById('cEmail').value.trim();
+  const msg   = document.getElementById('cMsg').value.trim();
+
+  if(!name)  { showNotif('⚠️ Please enter your name.'); return; }
+  if(!email) { showNotif('⚠️ Please enter your email.'); return; }
+  if(!msg)   { showNotif('⚠️ Please write a message.'); return; }
+
+  const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRx.test(email)){ showNotif('⚠️ Please enter a valid email address.'); return; }
+
+  const subject = encodeURIComponent(`Portfolio Message from ${name}`);
+  const body    = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n─────────────────\nMessage:\n${msg}\n─────────────────\n\nSent via portfolio contact form.`);
+  window.open(`mailto:rythm3472@gmail.com?subject=${subject}&body=${body}`);
+
+  showNotif('✦ Email client opened! Your message is ready to send.', 4500);
+  document.getElementById('cName').value  = '';
+  document.getElementById('cEmail').value = '';
+  document.getElementById('cMsg').value   = '';
+}
+</script>
+</body>
+</html>
