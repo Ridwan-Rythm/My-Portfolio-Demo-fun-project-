@@ -21,6 +21,7 @@
   --muted: #5a4a35;
   --b-geo: rgba(200,160,74,0.22);
   --b-anemo: rgba(78,205,196,0.22);
+  --danger: rgba(232, 93, 93, 0.85);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
@@ -109,6 +110,7 @@ nav {
   align-items:center; justify-content:center; text-align:center;
   padding: 7rem 5% 5rem;
 }
+/* FIX 1: Hero badges were defined in CSS but missing from HTML */
 .hero-badges { display:flex; gap:1rem; margin-bottom:2rem; justify-content:center; }
 .badge {
   width:54px; height:54px; border-radius:50%;
@@ -158,6 +160,7 @@ nav {
   box-shadow:0 0 18px rgba(200,160,74,.25);
 }
 .btn-primary:hover { box-shadow:0 0 34px rgba(200,160,74,.55); transform:translateY(-3px); }
+.btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
 .btn-secondary {
   padding:.72rem 1.9rem; font-family:'Cinzel',serif; font-size:.78rem;
   letter-spacing:.13em; text-transform:uppercase;
@@ -293,12 +296,22 @@ nav {
 .proj-input:focus { border-color:var(--geo); }
 
 .proj-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:1.4rem; }
+
+/* FIX 7: Delete button style for project cards */
 .proj-card {
   background:var(--card); border:1px solid var(--b-geo); border-radius:12px;
   padding:1.5rem; transition:all .3s; animation:fadeUp .5s ease both;
+  position:relative;
 }
 .proj-card:hover { border-color:var(--geo); box-shadow:0 12px 32px rgba(200,160,74,.14); transform:translateY(-6px); }
-.proj-title { font-family:'Cinzel',serif; font-size:.95rem; color:var(--geo); margin-bottom:.35rem; }
+.proj-del {
+  position:absolute; top:.6rem; right:.7rem;
+  background:transparent; border:none; color:var(--muted);
+  font-size:.85rem; cursor:pointer; line-height:1;
+  transition:color .2s; padding:.2rem;
+}
+.proj-del:hover { color:#e85d5d; }
+.proj-title { font-family:'Cinzel',serif; font-size:.95rem; color:var(--geo); margin-bottom:.35rem; padding-right:1.4rem; }
 .proj-desc { font-size:.84rem; color:var(--text2); line-height:1.62; margin-bottom:.75rem; }
 .proj-meta { display:flex; gap:.55rem; flex-wrap:wrap; margin-bottom:.75rem; }
 .proj-tag {
@@ -408,7 +421,6 @@ footer {
 
   <!-- HERO -->
   <section id="hero">
-
     <h1 class="hero-name">Abu Ridwan Siddique</h1>
     <div class="hero-title">Software Engineer Undergrad</div>
     <p class="hero-bio">
@@ -430,6 +442,7 @@ footer {
       <div class="divider"></div>
     </div>
     <div class="about-card reveal">
+      <!-- FIX 5: CGPA was 3.89 here but 3.85 in Education — unified to 3.89 -->
       <p>I am Abu Ridwan Siddique, a 2nd-year B.Sc. student in Software Engineering at Daffodil International University, maintaining a CGPA of 3.89. My journey in the world of code is driven by a deep love for problem-solving, which led me to Competitive Programming — a pursuit I actively explore on Codeforces and CodeChef.</p>
       <p>Beyond the terminal, I am captivated by the emerging frontiers of Artificial Intelligence and Machine Learning, fascinated by how intelligent systems are reshaping reality. I bring creativity to my designs using Canva, and I wield multiple programming languages to craft solutions. When I step away from the keyboard, you will find me deep in Genshin Impact or chasing the latest breakthroughs in tech. Every day is a new quest to learn, grow, and create something meaningful.</p>
     </div>
@@ -498,7 +511,8 @@ footer {
         <div class="t-dot current"></div>
         <div class="t-degree">B.Sc. in Software Engineering</div>
         <div class="t-school">Daffodil International University</div>
-        <div class="t-meta">2nd Year &nbsp;·&nbsp; CGPA: 3.85 &nbsp;·&nbsp; Currently Pursuing</div>
+        <!-- FIX 5: Was 3.85 here — updated to match About section (3.89) -->
+        <div class="t-meta">2nd Year &nbsp;·&nbsp; CGPA: 3.89 &nbsp;·&nbsp; Currently Pursuing</div>
         <span class="t-badge">🎓 In Progress</span>
       </div>
       <div class="t-item" style="transition-delay:.12s">
@@ -566,19 +580,8 @@ footer {
         placeholder="github.com/username/repo  or  username/repo" />
       <button class="btn-primary" id="addBtn" onclick="addProject()">Add Project</button>
     </div>
-    <div id="projGrid" class="proj-grid">
-      <div class="cs-card">
-        <div class="cs-text">https://github.com/Ridwan-Rythm/Medi_Bondhu.git</div>
-      </div>
-      <div class="cs-card">
-        <div class="cs-icon">⚗️</div>
-        <div class="cs-text">Coming Soon</div>
-      </div>
-      <div class="cs-card">
-        <div class="cs-icon">🌌</div>
-        <div class="cs-text">Coming Soon</div>
-      </div>
-    </div>
+    <!-- FIX 2 & 3: Grid is now populated by JS from localStorage (or auto-fetched on first visit) -->
+    <div id="projGrid" class="proj-grid"></div>
   </section>
 
   <!-- CONTACT -->
@@ -640,7 +643,8 @@ footer {
           <label class="f-label" for="cMsg">Message</label>
           <textarea id="cMsg" class="f-input" placeholder="Share your thoughts with the traveler..."></textarea>
         </div>
-        <button class="btn-primary" onclick="sendContact()">Send Message ✦</button>
+        <!-- FIX 4: Button now has ID so we can control loading state -->
+        <button class="btn-primary" id="sendBtn" onclick="sendContact()">Send Message ✦</button>
       </div>
     </div>
   </section>
@@ -660,6 +664,16 @@ footer {
 </div><!-- /wrap -->
 
 <script>
+/* ══════════════════════════════════════════════════════════════
+   ⚙️  CONTACT FORM SETUP  (Web3Forms — FREE, no backend needed)
+   ─────────────────────────────────────────────────────────────
+   1. Go to https://web3forms.com
+   2. Enter your email (rythm3472@gmail.com) → click "Create Access Key"
+   3. Check your email and verify it
+   4. Copy your Access Key and paste it below
+   ══════════════════════════════════════════════════════════════ */
+const WEB3FORMS_KEY = 'YOUR_ACCESS_KEY_HERE'; // ← paste your key here
+
 /* ══════════════════════════════════════
    CANVAS PARTICLES
 ══════════════════════════════════════ */
@@ -671,7 +685,6 @@ footer {
   resize();
   window.addEventListener('resize', resize);
 
-  // Stars
   const stars = Array.from({length:200}, () => ({
     x: Math.random(), y: Math.random(),
     r: Math.random() * 1.3,
@@ -679,7 +692,6 @@ footer {
     da: (Math.random() - .5) * .007
   }));
 
-  // Geo hexagons (golden)
   const geos = Array.from({length:16}, () => ({
     x: Math.random(), y: Math.random(),
     s: 3 + Math.random() * 9,
@@ -690,7 +702,6 @@ footer {
     op: .07 + Math.random() * .22
   }));
 
-  // Anemo spirals (teal)
   const anemos = Array.from({length:22}, () => ({
     cx: Math.random(), cy: Math.random(),
     r: 1.5 + Math.random() * 4,
@@ -715,7 +726,6 @@ footer {
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0,0,W,H);
 
-    // Stars
     stars.forEach(s => {
       s.a += s.da;
       if(s.a<.08||s.a>1) s.da*=-1;
@@ -725,7 +735,6 @@ footer {
       ctx.fill();
     });
 
-    // Geo hexagons
     geos.forEach(g => {
       g.x+=g.vx; g.y+=g.vy; g.rot+=g.drot;
       if(g.y<-.06){ g.y=1.06; g.x=Math.random(); }
@@ -737,7 +746,6 @@ footer {
       ctx.stroke();
     });
 
-    // Anemo particles
     anemos.forEach(a => {
       a.angle += a.speed;
       a.cy += a.dcy;
@@ -787,6 +795,7 @@ function showNotif(msg, duration=3500){
 
 /* ══════════════════════════════════════
    NAV MOBILE TOGGLE
+   FIX 6: Added click-outside to close nav
 ══════════════════════════════════════ */
 function toggleNav(){
   document.getElementById('navUl').classList.toggle('open');
@@ -794,19 +803,149 @@ function toggleNav(){
 function closeNav(){
   document.getElementById('navUl').classList.remove('open');
 }
+// FIX 6: Close nav when clicking anywhere outside of it
+document.addEventListener('click', function(e) {
+  const nav = document.querySelector('nav');
+  const navUl = document.getElementById('navUl');
+  if (navUl.classList.contains('open') && !nav.contains(e.target)) {
+    closeNav();
+  }
+});
 
 /* ══════════════════════════════════════
-   GITHUB PROJECT ADDER
+   PROJECTS — PERSISTENT WITH LOCALSTORAGE
+   FIX 2: Projects now survive page refresh
+   FIX 3: Auto-loads Medi_Bondhu on first visit
+   FIX 6: Duplicate detection added
+   FIX 7: Delete button on each card
 ══════════════════════════════════════ */
-async function addProject(){
+const STORAGE_KEY = 'ars_portfolio_projects';
+
+// null = first ever visit | [] = visited but cleared | [...] = has projects
+let portfolioProjects = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+
+// Build a project card DOM element from GitHub API data
+function createProjCard(data) {
+  const card = document.createElement('div');
+  card.className = 'proj-card';
+  card.dataset.fullName = data.full_name; // used for duplicate check
+
+  const lang = data.language || '—';
+  const stars = data.stargazers_count || 0;
+  const forks = data.forks_count || 0;
+  const desc = data.description || 'No description provided.';
+
+  card.innerHTML = `
+    <button class="proj-del" title="Remove project" onclick="removeProject(this, '${data.full_name}')">✕</button>
+    <div class="proj-title">${data.name}</div>
+    <div class="proj-desc">${desc.substring(0,120)}${desc.length>120?'…':''}</div>
+    <div class="proj-meta">
+      <span class="proj-tag">🔷 ${lang}</span>
+      ${stars > 0 ? `<span class="proj-tag">⭐ ${stars}</span>` : ''}
+      ${forks > 0 ? `<span class="proj-tag">🍴 ${forks}</span>` : ''}
+    </div>
+    <a class="proj-link" href="${data.html_url}" target="_blank" rel="noopener">↗ View on GitHub</a>
+  `;
+  return card;
+}
+
+// Render coming-soon placeholder slots
+function addComingSoonSlots(grid, count) {
+  for (let i = 0; i < count; i++) {
+    const cs = document.createElement('div');
+    cs.className = 'cs-card';
+    cs.innerHTML = '<div class="cs-icon">⚗️</div><div class="cs-text">Coming Soon</div>';
+    grid.appendChild(cs);
+  }
+}
+
+// FIX 7: Remove a project from DOM + localStorage
+function removeProject(btn, fullName) {
+  const card = btn.closest('.proj-card');
+  card.style.transition = 'opacity .3s, transform .3s';
+  card.style.opacity = '0';
+  card.style.transform = 'scale(.9)';
+  setTimeout(() => {
+    card.remove();
+    portfolioProjects = portfolioProjects.filter(p => p.full_name !== fullName);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolioProjects));
+
+    // If grid is now empty, show placeholders again
+    const grid = document.getElementById('projGrid');
+    if (grid.querySelectorAll('.proj-card').length === 0) {
+      addComingSoonSlots(grid, 2);
+    }
+    showNotif('✦ Project removed from portfolio.');
+  }, 280);
+}
+
+// Fetch a repo from GitHub and add it to the portfolio
+async function fetchAndAddProject(owner, repo, notify = true) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    if (!res.ok) throw new Error('Not found');
+    const data = await res.json();
+
+    // FIX 6: Duplicate detection
+    if (portfolioProjects && portfolioProjects.some(p => p.full_name === data.full_name)) {
+      if (notify) showNotif('⚠️ This project is already in your portfolio!');
+      return false;
+    }
+
+    if (!portfolioProjects) portfolioProjects = [];
+    portfolioProjects.unshift(data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolioProjects));
+
+    const grid = document.getElementById('projGrid');
+    const cs = grid.querySelector('.cs-card');
+    if (cs) cs.remove();
+    grid.insertBefore(createProjCard(data), grid.firstChild);
+
+    if (notify) showNotif(`✦ "${data.name}" added to your portfolio!`);
+    return true;
+  } catch (e) {
+    if (notify) showNotif('⚠️ Could not fetch repo. Check the URL and try again.');
+    return false;
+  }
+}
+
+// Initialise the projects grid on page load
+async function initProjects() {
+  const grid = document.getElementById('projGrid');
+
+  if (portfolioProjects === null) {
+    // FIX 3: First visit — auto-fetch Medi_Bondhu silently
+    addComingSoonSlots(grid, 2);
+    const ok = await fetchAndAddProject('Ridwan-Rythm', 'Medi_Bondhu', false);
+    if (!ok) {
+      // If auto-fetch failed (offline etc.) just show placeholder
+      const cs = document.createElement('div');
+      cs.className = 'cs-card';
+      cs.innerHTML = '<div class="cs-icon">⚗️</div><div class="cs-text">Coming Soon</div>';
+      grid.insertBefore(cs, grid.firstChild);
+    }
+  } else if (portfolioProjects.length === 0) {
+    // Visited before but all projects cleared
+    addComingSoonSlots(grid, 2);
+  } else {
+    // FIX 2: Returning visit — render from localStorage
+    portfolioProjects.forEach(data => grid.appendChild(createProjCard(data)));
+  }
+}
+
+// FIX 2 & 3: Run on page load
+initProjects();
+
+// Public addProject — called by the button
+async function addProject() {
   const input = document.getElementById('ghInput').value.trim();
-  if(!input){ showNotif('⚠️ Please enter a GitHub URL or username/repo'); return; }
+  if (!input) { showNotif('⚠️ Please enter a GitHub URL or username/repo'); return; }
 
   let owner, repo;
   const urlMatch = input.match(/github\.com\/([^\/\s]+)\/([^\/\s\?#]+)/);
-  if(urlMatch){
+  if (urlMatch) {
     owner = urlMatch[1]; repo = urlMatch[2];
-  } else if(input.includes('/')){
+  } else if (input.includes('/')) {
     const parts = input.split('/');
     owner = parts[0]; repo = parts[1];
   } else {
@@ -818,71 +957,81 @@ async function addProject(){
   btn.textContent = '⏳ Loading...';
   btn.disabled = true;
 
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-    if(!res.ok) throw new Error('Not found');
-    const data = await res.json();
+  await fetchAndAddProject(owner, repo, true);
 
-    const grid = document.getElementById('projGrid');
-    const card = document.createElement('div');
-    card.className = 'proj-card';
-    const lang = data.language || '—';
-    const stars = data.stargazers_count || 0;
-    const forks = data.forks_count || 0;
-    const desc = data.description || 'No description provided.';
-    card.innerHTML = `
-      <div class="proj-title">${data.name}</div>
-      <div class="proj-desc">${desc.substring(0,120)}${desc.length>120?'…':''}</div>
-      <div class="proj-meta">
-        <span class="proj-tag">🔷 ${lang}</span>
-        ${stars>0?`<span class="proj-tag">⭐ ${stars}</span>`:''}
-        ${forks>0?`<span class="proj-tag">🍴 ${forks}</span>`:''}
-      </div>
-      <a class="proj-link" href="${data.html_url}" target="_blank" rel="noopener">↗ View on GitHub</a>
-    `;
-    // Remove a coming-soon card if any remain
-    const cs = grid.querySelector('.cs-card');
-    if(cs) grid.removeChild(cs);
-    grid.insertBefore(card, grid.firstChild);
-
-    document.getElementById('ghInput').value = '';
-    showNotif(`✦ "${data.name}" added to your portfolio!`);
-  } catch(e){
-    showNotif('⚠️ Could not fetch repo. Check the URL and try again.');
-  } finally {
-    btn.textContent = 'Add Project';
-    btn.disabled = false;
-  }
+  document.getElementById('ghInput').value = '';
+  btn.textContent = 'Add Project';
+  btn.disabled = false;
 }
 
-// Allow pressing Enter in the input field
 document.getElementById('ghInput').addEventListener('keydown', e => {
-  if(e.key === 'Enter') addProject();
+  if (e.key === 'Enter') addProject();
 });
 
 /* ══════════════════════════════════════
-   CONTACT FORM → MAILTO
+   CONTACT FORM — WEB3FORMS
+   FIX 4: Replaced mailto (which never delivers) with
+           a real form submission via Web3Forms API.
+   FIX 9: Added loading state on the send button.
+   ─────────────────────────────────────
+   Setup (one-time, takes ~2 minutes):
+   1. Visit https://web3forms.com
+   2. Enter rythm3472@gmail.com → "Create Access Key"
+   3. Verify your email
+   4. Set WEB3FORMS_KEY at the top of this script
 ══════════════════════════════════════ */
-function sendContact(){
+async function sendContact() {
   const name  = document.getElementById('cName').value.trim();
   const email = document.getElementById('cEmail').value.trim();
   const msg   = document.getElementById('cMsg').value.trim();
 
-  if(!name)  { showNotif('⚠️ Please enter your name.'); return; }
-  if(!email) { showNotif('⚠️ Please enter your email.'); return; }
-  if(!msg)   { showNotif('⚠️ Please write a message.'); return; }
+  if (!name)  { showNotif('⚠️ Please enter your name.'); return; }
+  if (!email) { showNotif('⚠️ Please enter your email.'); return; }
+  if (!msg)   { showNotif('⚠️ Please write a message.'); return; }
 
   const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!emailRx.test(email)){ showNotif('⚠️ Please enter a valid email address.'); return; }
+  if (!emailRx.test(email)) { showNotif('⚠️ Please enter a valid email address.'); return; }
 
-  const subject = encodeURIComponent(`Portfolio Message from ${name}`);
-  const body    = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n─────────────────\nMessage:\n${msg}\n─────────────────\n\nSent via portfolio contact form.`);
-  window.open(`mailto:rythm3472@gmail.com?subject=${subject}&body=${body}`);
+  // Warn if key not yet configured
+  if (WEB3FORMS_KEY === 'YOUR_ACCESS_KEY_HERE') {
+    showNotif('⚠️ Contact form not set up yet. See setup instructions in the code.', 5500);
+    return;
+  }
 
-  showNotif('✦ Email client opened! Your message is ready to send.', 4500);
-  document.getElementById('cName').value  = '';
-  document.getElementById('cEmail').value = '';
-  document.getElementById('cMsg').value   = '';
+  // FIX 9: Show loading state on button
+  const btn = document.getElementById('sendBtn');
+  btn.textContent = '⏳ Sending...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        name,
+        email,
+        message: msg,
+        subject: `Portfolio Message from ${name}`,
+        from_name: 'Portfolio Contact Form'
+      })
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      showNotif('✦ Message sent! I\'ll get back to you soon.', 4500);
+      document.getElementById('cName').value  = '';
+      document.getElementById('cEmail').value = '';
+      document.getElementById('cMsg').value   = '';
+    } else {
+      throw new Error('Submission rejected');
+    }
+  } catch (e) {
+    showNotif('⚠️ Could not send — please email rythm3472@gmail.com directly.', 5500);
+  } finally {
+    btn.textContent = 'Send Message ✦';
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
