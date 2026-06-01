@@ -574,13 +574,7 @@ footer {
       <h2 class="sect-title">Projects</h2>
       <div class="divider"></div>
     </div>
-    <div class="proj-adder reveal">
-      <span class="proj-adder-label">✦ Add GitHub Repo</span>
-      <input id="ghInput" class="proj-input" type="text"
-        placeholder="github.com/username/repo  or  username/repo" />
-      <button class="btn-primary" id="addBtn" onclick="addProject()">Add Project</button>
-    </div>
-    <!-- FIX 2 & 3: Grid is now populated by JS from localStorage (or auto-fetched on first visit) -->
+    <!-- Projects are loaded automatically from the REPOS list in the <script> below -->
     <div id="projGrid" class="proj-grid"></div>
   </section>
 
@@ -667,10 +661,15 @@ footer {
 /* ══════════════════════════════════════════════════════════════
    ⚙️  CONTACT FORM SETUP  (Web3Forms — FREE, no backend needed)
    ─────────────────────────────────────────────────────────────
+   TO RECEIVE EMAILS FROM THE CONTACT FORM:
    1. Go to https://web3forms.com
-   2. Enter your email (rythm3472@gmail.com) → click "Create Access Key"
-   3. Check your email and verify it
-   4. Copy your Access Key and paste it below
+   2. Enter rythm3472@gmail.com → click "Create Access Key"
+   3. Check your inbox and verify the email
+   4. Copy the Access Key and paste it below (replace YOUR_ACCESS_KEY_HERE)
+
+   Until the key is set, the form uses a mailto: fallback that
+   opens the visitor's email client pre-filled — so you still
+   receive messages.
    ══════════════════════════════════════════════════════════════ */
 const WEB3FORMS_KEY = 'YOUR_ACCESS_KEY_HERE'; // ← paste your key here
 
@@ -812,33 +811,41 @@ document.addEventListener('click', function(e) {
   }
 });
 
-/* ══════════════════════════════════════
-   PROJECTS — PERSISTENT WITH LOCALSTORAGE
-   FIX 2: Projects now survive page refresh
-   FIX 3: Auto-loads Medi_Bondhu on first visit
-   FIX 6: Duplicate detection added
-   FIX 7: Delete button on each card
-══════════════════════════════════════ */
-const STORAGE_KEY = 'ars_portfolio_projects';
+/* ══════════════════════════════════════════════════════════════
+   📁  PROJECTS — HOW TO ADD YOUR REPOS
+   ─────────────────────────────────────────────────────────────
+   Just paste a GitHub repo URL into the REPOS array below.
+   Each entry is a full GitHub URL (https or .git both work).
 
-// null = first ever visit | [] = visited but cleared | [...] = has projects
-let portfolioProjects = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+   EXAMPLE — to add another project, copy the pattern:
+     'https://github.com/Ridwan-Rythm/YOUR_REPO_NAME',
 
-// Build a project card DOM element from GitHub API data
+   Save the file and re-open in browser. That's it!
+   ──────────────────────────────────────────────── */
+const REPOS = [
+  'https://github.com/Ridwan-Rythm/Medi_Bondhu.git',
+  // 'https://github.com/Ridwan-Rythm/NEXT_PROJECT.git',  ← paste next repo here
+  // 'https://github.com/Ridwan-Rythm/ANOTHER_PROJECT.git',
+];
+
+// ─── Parse a GitHub URL into { owner, repo } ───────────────
+function parseGithubUrl(url) {
+  const m = url.match(/github\.com\/([^\/\s]+)\/([^\/\s\?#]+)/);
+  if (!m) return null;
+  return { owner: m[1], repo: m[2].replace(/\.git$/, '') };
+}
+
+// ─── Build a project card from GitHub API data ──────────────
 function createProjCard(data) {
   const card = document.createElement('div');
   card.className = 'proj-card';
-  card.dataset.fullName = data.full_name; // used for duplicate check
-
   const lang = data.language || '—';
   const stars = data.stargazers_count || 0;
   const forks = data.forks_count || 0;
   const desc = data.description || 'No description provided.';
-
   card.innerHTML = `
-    <button class="proj-del" title="Remove project" onclick="removeProject(this, '${data.full_name}')">✕</button>
     <div class="proj-title">${data.name}</div>
-    <div class="proj-desc">${desc.substring(0,120)}${desc.length>120?'…':''}</div>
+    <div class="proj-desc">${desc.substring(0, 120)}${desc.length > 120 ? '…' : ''}</div>
     <div class="proj-meta">
       <span class="proj-tag">🔷 ${lang}</span>
       ${stars > 0 ? `<span class="proj-tag">⭐ ${stars}</span>` : ''}
@@ -849,136 +856,58 @@ function createProjCard(data) {
   return card;
 }
 
-// Render coming-soon placeholder slots
-function addComingSoonSlots(grid, count) {
-  for (let i = 0; i < count; i++) {
-    const cs = document.createElement('div');
-    cs.className = 'cs-card';
-    cs.innerHTML = '<div class="cs-icon">⚗️</div><div class="cs-text">Coming Soon</div>';
-    grid.appendChild(cs);
-  }
-}
-
-// FIX 7: Remove a project from DOM + localStorage
-function removeProject(btn, fullName) {
-  const card = btn.closest('.proj-card');
-  card.style.transition = 'opacity .3s, transform .3s';
-  card.style.opacity = '0';
-  card.style.transform = 'scale(.9)';
-  setTimeout(() => {
-    card.remove();
-    portfolioProjects = portfolioProjects.filter(p => p.full_name !== fullName);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolioProjects));
-
-    // If grid is now empty, show placeholders again
-    const grid = document.getElementById('projGrid');
-    if (grid.querySelectorAll('.proj-card').length === 0) {
-      addComingSoonSlots(grid, 2);
-    }
-    showNotif('✦ Project removed from portfolio.');
-  }, 280);
-}
-
-// Fetch a repo from GitHub and add it to the portfolio
-async function fetchAndAddProject(owner, repo, notify = true) {
+// ─── Fetch one repo and append its card ─────────────────────
+async function fetchRepo(url, grid) {
+  const parsed = parseGithubUrl(url);
+  if (!parsed) return;
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-    if (!res.ok) throw new Error('Not found');
+    const res = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`);
+    if (!res.ok) throw new Error('not found');
     const data = await res.json();
-
-    // FIX 6: Duplicate detection
-    if (portfolioProjects && portfolioProjects.some(p => p.full_name === data.full_name)) {
-      if (notify) showNotif('⚠️ This project is already in your portfolio!');
-      return false;
-    }
-
-    if (!portfolioProjects) portfolioProjects = [];
-    portfolioProjects.unshift(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolioProjects));
-
-    const grid = document.getElementById('projGrid');
+    // Remove a coming-soon slot if one exists
     const cs = grid.querySelector('.cs-card');
     if (cs) cs.remove();
-    grid.insertBefore(createProjCard(data), grid.firstChild);
-
-    if (notify) showNotif(`✦ "${data.name}" added to your portfolio!`);
-    return true;
+    grid.appendChild(createProjCard(data));
   } catch (e) {
-    if (notify) showNotif('⚠️ Could not fetch repo. Check the URL and try again.');
-    return false;
+    console.warn(`Could not load repo: ${url}`, e);
   }
 }
 
-// Initialise the projects grid on page load
+// ─── Initialise projects grid on page load ──────────────────
 async function initProjects() {
   const grid = document.getElementById('projGrid');
+  const validRepos = REPOS.map(u => u.trim()).filter(u => u && !u.startsWith('//'));
 
-  if (portfolioProjects === null) {
-    // FIX 3: First visit — auto-fetch Medi_Bondhu silently
-    addComingSoonSlots(grid, 2);
-    const ok = await fetchAndAddProject('Ridwan-Rythm', 'Medi_Bondhu', false);
-    if (!ok) {
-      // If auto-fetch failed (offline etc.) just show placeholder
+  if (validRepos.length === 0) {
+    // No repos listed yet — show placeholder slots
+    for (let i = 0; i < 2; i++) {
       const cs = document.createElement('div');
       cs.className = 'cs-card';
       cs.innerHTML = '<div class="cs-icon">⚗️</div><div class="cs-text">Coming Soon</div>';
-      grid.insertBefore(cs, grid.firstChild);
+      grid.appendChild(cs);
     }
-  } else if (portfolioProjects.length === 0) {
-    // Visited before but all projects cleared
-    addComingSoonSlots(grid, 2);
-  } else {
-    // FIX 2: Returning visit — render from localStorage
-    portfolioProjects.forEach(data => grid.appendChild(createProjCard(data)));
+    return;
   }
+
+  // Show one placeholder per repo while they load
+  validRepos.forEach(() => {
+    const cs = document.createElement('div');
+    cs.className = 'cs-card';
+    cs.innerHTML = '<div class="cs-icon">⚗️</div><div class="cs-text">Loading…</div>';
+    grid.appendChild(cs);
+  });
+
+  // Fetch all repos in parallel
+  await Promise.all(validRepos.map(url => fetchRepo(url, grid)));
+
+  // Remove any leftover placeholders (e.g. if a fetch failed)
+  grid.querySelectorAll('.cs-card').forEach(cs => cs.remove());
 }
 
-// FIX 2 & 3: Run on page load
 initProjects();
 
-// Public addProject — called by the button
-async function addProject() {
-  const input = document.getElementById('ghInput').value.trim();
-  if (!input) { showNotif('⚠️ Please enter a GitHub URL or username/repo'); return; }
-
-  let owner, repo;
-  const urlMatch = input.match(/github\.com\/([^\/\s]+)\/([^\/\s\?#]+)/);
-  if (urlMatch) {
-    owner = urlMatch[1]; repo = urlMatch[2];
-  } else if (input.includes('/')) {
-    const parts = input.split('/');
-    owner = parts[0]; repo = parts[1];
-  } else {
-    showNotif('⚠️ Invalid format. Try: github.com/user/repo or user/repo'); return;
-  }
-  repo = repo.replace(/\.git$/, '').split('?')[0].split('#')[0];
-
-  const btn = document.getElementById('addBtn');
-  btn.textContent = '⏳ Loading...';
-  btn.disabled = true;
-
-  await fetchAndAddProject(owner, repo, true);
-
-  document.getElementById('ghInput').value = '';
-  btn.textContent = 'Add Project';
-  btn.disabled = false;
-}
-
-document.getElementById('ghInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addProject();
-});
-
 /* ══════════════════════════════════════
-   CONTACT FORM — WEB3FORMS
-   FIX 4: Replaced mailto (which never delivers) with
-           a real form submission via Web3Forms API.
-   FIX 9: Added loading state on the send button.
-   ─────────────────────────────────────
-   Setup (one-time, takes ~2 minutes):
-   1. Visit https://web3forms.com
-   2. Enter rythm3472@gmail.com → "Create Access Key"
-   3. Verify your email
-   4. Set WEB3FORMS_KEY at the top of this script
+   CONTACT FORM — WEB3FORMS with mailto fallback
 ══════════════════════════════════════ */
 async function sendContact() {
   const name  = document.getElementById('cName').value.trim();
@@ -992,17 +921,22 @@ async function sendContact() {
   const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRx.test(email)) { showNotif('⚠️ Please enter a valid email address.'); return; }
 
-  // Warn if key not yet configured
-  if (WEB3FORMS_KEY === 'YOUR_ACCESS_KEY_HERE') {
-    showNotif('⚠️ Contact form not set up yet. See setup instructions in the code.', 5500);
-    return;
-  }
-
-  // FIX 9: Show loading state on button
   const btn = document.getElementById('sendBtn');
   btn.textContent = '⏳ Sending...';
   btn.disabled = true;
 
+  // ── If Web3Forms key is not configured, fall back to mailto ──
+  if (WEB3FORMS_KEY === 'YOUR_ACCESS_KEY_HERE') {
+    const subject = encodeURIComponent(`Portfolio Message from ${name}`);
+    const body    = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${msg}`);
+    window.location.href = `mailto:rythm3472@gmail.com?subject=${subject}&body=${body}`;
+    showNotif('✦ Opening your email client…', 4000);
+    btn.textContent = 'Send Message ✦';
+    btn.disabled = false;
+    return;
+  }
+
+  // ── Web3Forms submission ──────────────────────────────────────
   try {
     const res = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
@@ -1027,7 +961,11 @@ async function sendContact() {
       throw new Error('Submission rejected');
     }
   } catch (e) {
-    showNotif('⚠️ Could not send — please email rythm3472@gmail.com directly.', 5500);
+    // If Web3Forms fails, fall back to mailto so the message isn't lost
+    const subject = encodeURIComponent(`Portfolio Message from ${name}`);
+    const body    = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${msg}`);
+    window.location.href = `mailto:rythm3472@gmail.com?subject=${subject}&body=${body}`;
+    showNotif('⚠️ Direct send failed — opening email client instead.', 5000);
   } finally {
     btn.textContent = 'Send Message ✦';
     btn.disabled = false;
